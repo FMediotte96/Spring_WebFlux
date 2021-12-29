@@ -1,5 +1,6 @@
-package com.bolsadeideas.springboot.reactor.springboot.reactor.app;
+package com.bolsadeideas.springboot.reactor.app;
 
+import com.bolsadeideas.springboot.reactor.app.models.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -18,15 +19,21 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        Flux<String> names = Flux.just("Andres", "Facundo", "María", "Diego", "Juan")
-                .doOnNext(it -> {
-                    if (it.isEmpty()) {
-                        throw new RuntimeException("Names cannot be empty");
+        Flux<User> names = Flux.just("Andres", "Facundo", "María", "Diego", "Juan")
+                .map(name -> new User(name.toUpperCase(), null))
+                .doOnNext(user -> {
+                    if (user == null) {
+                        throw new IllegalArgumentException("Names cannot be empty");
                     }
-                    System.out.println(it);
+                    System.out.println(user.getName());
+                })
+                .map(user -> {
+                    String name = user.getName().toLowerCase();
+                    user.setName(name);
+                    return user;
                 });
 
-        names.subscribe(LOGGER::info,
+        names.subscribe(it -> LOGGER.info(it.toString()),
                 err -> LOGGER.error(err.getMessage()),
                 () -> LOGGER.info("The observable's execution has finalized successfully!"));
     }

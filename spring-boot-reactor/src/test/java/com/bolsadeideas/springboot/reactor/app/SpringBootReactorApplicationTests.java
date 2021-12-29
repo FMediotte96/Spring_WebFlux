@@ -1,4 +1,4 @@
-package com.bolsadeideas.springboot.reactor.springboot.reactor.app;
+package com.bolsadeideas.springboot.reactor.app;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
