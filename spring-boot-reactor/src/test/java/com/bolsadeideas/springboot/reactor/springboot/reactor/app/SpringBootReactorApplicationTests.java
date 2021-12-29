@@ -1,5 +1,6 @@
 package com.bolsadeideas.springboot.reactor.springboot.reactor.app;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -8,6 +9,7 @@ class SpringBootReactorApplicationTests {
 
     @Test
     void contextLoads() {
+        Assertions.assertTrue(true);
     }
 
 }
