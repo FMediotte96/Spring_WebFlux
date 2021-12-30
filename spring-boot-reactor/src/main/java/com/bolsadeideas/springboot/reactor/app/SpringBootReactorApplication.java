@@ -23,7 +23,30 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        flatMapExample();
+        exampleToString();
+    }
+
+    public void exampleToString() throws Exception {
+        List<User> usersList = new ArrayList<>();
+        usersList.add(new User("Andres", "Guzman"));
+        usersList.add(new User("Facundo", "Mediotte"));
+        usersList.add(new User("María", "Fulana"));
+        usersList.add(new User("Diego", "Maradona"));
+        usersList.add(new User("Juan", "Mengano"));
+        usersList.add(new User("Bruce", "Lee"));
+        usersList.add(new User("Bruce", "Willis"));
+
+        Flux.fromIterable(usersList)
+            .map(user -> user.getName().toUpperCase().concat(" ").concat(user.getLastName().toUpperCase()))
+            .flatMap(name -> {
+                if (name.contains("bruce".toUpperCase())) {
+                    return Mono.just(name);
+                } else {
+                    return Mono.empty();
+                }
+            })
+            .map(String::toLowerCase)
+            .subscribe(LOGGER::info);
     }
 
     public void flatMapExample() throws Exception {
@@ -39,7 +62,7 @@ public class SpringBootReactorApplication implements CommandLineRunner {
         Flux.fromIterable(usersList)
             .map(name -> new User(name.split(" ")[0].toUpperCase(), name.split(" ")[1].toUpperCase()))
             .flatMap(user -> {
-                if("bruce".equalsIgnoreCase(user.getName())) {
+                if ("bruce".equalsIgnoreCase(user.getName())) {
                     return Mono.just(user);
                 } else {
                     return Mono.empty();
