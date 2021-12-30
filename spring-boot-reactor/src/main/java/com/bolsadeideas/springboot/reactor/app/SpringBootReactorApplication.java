@@ -23,7 +23,22 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        exampleToString();
+        exampleConvertToMono();
+    }
+
+    public void exampleConvertToMono() throws Exception {
+        List<User> usersList = new ArrayList<>();
+        usersList.add(new User("Andres", "Guzman"));
+        usersList.add(new User("Facundo", "Mediotte"));
+        usersList.add(new User("María", "Fulana"));
+        usersList.add(new User("Diego", "Maradona"));
+        usersList.add(new User("Juan", "Mengano"));
+        usersList.add(new User("Bruce", "Lee"));
+        usersList.add(new User("Bruce", "Willis"));
+
+        Flux.fromIterable(usersList)
+            .collectList()
+            .subscribe(userList -> userList.forEach(item -> LOGGER.info(item.toString())));
     }
 
     public void exampleToString() throws Exception {
