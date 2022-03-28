@@ -1,6 +1,8 @@
 package com.bolsadeideas.springboot.reactor.app;
 
+import com.bolsadeideas.springboot.reactor.app.models.Comments;
 import com.bolsadeideas.springboot.reactor.app.models.User;
+import com.bolsadeideas.springboot.reactor.app.models.UserWithComments;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -23,7 +25,58 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        exampleConvertToMono();
+        exampleUserCommentsZipWith2();
+    }
+
+    public void exampleUserCommentsZipWith2() {
+        Mono<User> userMono = Mono.fromCallable(() -> new User("John", "Doe"));
+
+        Mono<Comments> userCommentsMono = Mono.fromCallable(() -> {
+            Comments comments = new Comments();
+            comments.addComment("Hola pepe, que tal!");
+            comments.addComment("Mañana voy a la playa!");
+            comments.addComment("Estoy tomando el curso de spring con reactor");
+            return comments;
+        });
+
+        Mono<UserWithComments> userWithComments = userMono
+            .zipWith(userCommentsMono)
+            .map(tuple -> {
+                User u = tuple.getT1();
+                Comments c = tuple.getT2();
+                return new UserWithComments(u, c);
+            });
+        userWithComments.subscribe(uc -> LOGGER.info(uc.toString()));
+    }
+
+    public void exampleUserCommentsZipWith() {
+        Mono<User> userMono = Mono.fromCallable(() -> new User("John", "Doe"));
+
+        Mono<Comments> userCommentsMono = Mono.fromCallable(() -> {
+            Comments comments = new Comments();
+            comments.addComment("Hola pepe, que tal!");
+            comments.addComment("Mañana voy a la playa!");
+            comments.addComment("Estoy tomando el curso de spring con reactor");
+            return comments;
+        });
+
+        Mono<UserWithComments> userWithComments = userMono.zipWith(userCommentsMono, UserWithComments::new);
+        userWithComments.subscribe(uc -> LOGGER.info(uc.toString()));
+    }
+
+    public void exampleUserCommentsFlatMap() {
+        Mono<User> userMono = Mono.fromCallable(() -> new User("John", "Doe"));
+
+        Mono<Comments> userCommentsMono = Mono.fromCallable(() -> {
+            Comments comments = new Comments();
+            comments.addComment("Hola pepe, que tal!");
+            comments.addComment("Mañana voy a la playa!");
+            comments.addComment("Estoy tomando el curso de spring con reactor");
+            return comments;
+        });
+
+        Mono<UserWithComments> userWithComments = userMono.flatMap(u -> userCommentsMono.map(c -> new UserWithComments(u, c)));
+        userWithComments.subscribe(uc -> LOGGER.info(uc.toString()));
     }
 
     public void exampleConvertToMono() throws Exception {
