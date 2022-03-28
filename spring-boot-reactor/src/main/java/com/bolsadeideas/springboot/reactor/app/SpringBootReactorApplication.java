@@ -25,7 +25,15 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        exampleUserCommentsZipWith2();
+        exampleUserCommentsZipWithRanges();
+    }
+
+    public void exampleUserCommentsZipWithRanges() {
+        Flux<Integer> ranges = Flux.range(0, 4);
+        Flux.just(1, 2, 3, 4)
+            .map(i -> (i * 2))
+            .zipWith(ranges, (uno, dos) -> String.format("Primer Flux: %d, Segundo Flux: %d", uno, dos))
+            .subscribe(LOGGER::info);
     }
 
     public void exampleUserCommentsZipWith2() {
