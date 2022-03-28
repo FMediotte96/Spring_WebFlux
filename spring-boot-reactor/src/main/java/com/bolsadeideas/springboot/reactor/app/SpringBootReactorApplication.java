@@ -3,6 +3,8 @@ package com.bolsadeideas.springboot.reactor.app;
 import com.bolsadeideas.springboot.reactor.app.models.Comments;
 import com.bolsadeideas.springboot.reactor.app.models.User;
 import com.bolsadeideas.springboot.reactor.app.models.UserWithComments;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -14,6 +16,7 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
@@ -29,7 +32,44 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        exampleInfiniteIntervalFromCreate();
+        exampleBackPressure();
+    }
+
+    public void exampleBackPressure() {
+        Flux.range(1, 10)
+            .log()
+            //.limitRate(5) //Esta forma es más acotada
+            .subscribe(new Subscriber<>() {
+                private Subscription s;
+                private final Integer limit = 5;
+                private Integer consumed = 0;
+
+                @Override
+                public void onSubscribe(Subscription s) {
+                    this.s = s;
+                    s.request(limit);
+                }
+
+                @Override
+                public void onNext(Integer t) {
+                    LOGGER.info(t.toString());
+                    consumed++;
+                    if(Objects.equals(consumed, limit)) {
+                        consumed = 0;
+                        s.request(limit);
+                    }
+                }
+
+                @Override
+                public void onError(Throwable t) {
+
+                }
+
+                @Override
+                public void onComplete() {
+
+                }
+            });
     }
 
     public void exampleInfiniteIntervalFromCreate() {
