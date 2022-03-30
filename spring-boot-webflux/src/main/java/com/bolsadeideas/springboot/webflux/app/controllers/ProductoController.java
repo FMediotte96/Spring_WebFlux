@@ -1,7 +1,7 @@
 package com.bolsadeideas.springboot.webflux.app.controllers;
 
-import com.bolsadeideas.springboot.webflux.app.models.dao.ProductoDAO;
 import com.bolsadeideas.springboot.webflux.app.models.documents.Producto;
+import com.bolsadeideas.springboot.webflux.app.models.services.ProductoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,16 +17,13 @@ import java.time.Duration;
 public class ProductoController {
 
     @Autowired
-    private ProductoDAO dao;
+    private ProductoService service;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProductoController.class);
 
     @GetMapping({"/listar", "/"})
     public String listar(Model model) {
-        Flux<Producto> productos = dao.findAll().map(producto -> {
-            producto.setNombre(producto.getNombre().toUpperCase());
-            return producto;
-        });
+        Flux<Producto> productos = service.findAllWithNameUpperCase();
 
         productos.subscribe(prod -> LOGGER.info(prod.getNombre()));
 
@@ -37,10 +34,7 @@ public class ProductoController {
 
     @GetMapping("/listar-datadriver")
     public String listarDataDriver(Model model) {
-        Flux<Producto> productos = dao.findAll().map(producto -> {
-            producto.setNombre(producto.getNombre().toUpperCase());
-            return producto;
-        }).delayElements(Duration.ofSeconds(1));
+        Flux<Producto> productos = service.findAllWithNameUpperCase().delayElements(Duration.ofSeconds(1));
 
         productos.subscribe(prod -> LOGGER.info(prod.getNombre()));
 
@@ -51,10 +45,7 @@ public class ProductoController {
 
     @GetMapping("/listar-full")
     public String listarFull(Model model) {
-        Flux<Producto> productos = dao.findAll().map(producto -> {
-            producto.setNombre(producto.getNombre().toUpperCase());
-            return producto;
-        }).repeat(5000);
+        Flux<Producto> productos = service.findAllWithNameUpperCaseAndRepeat();
 
         model.addAttribute("productos", productos);
         model.addAttribute("titulo", "Listado de productos");
@@ -63,10 +54,7 @@ public class ProductoController {
 
     @GetMapping("/listar-chunked")
     public String listarChunked(Model model) {
-        Flux<Producto> productos = dao.findAll().map(producto -> {
-            producto.setNombre(producto.getNombre().toUpperCase());
-            return producto;
-        }).repeat(5000);
+        Flux<Producto> productos = service.findAllWithNameUpperCaseAndRepeat();
 
         model.addAttribute("productos", productos);
         model.addAttribute("titulo", "Listado de productos");
