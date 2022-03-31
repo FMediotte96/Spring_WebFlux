@@ -18,8 +18,7 @@ public class Categoria {
     public Categoria() {
     }
 
-    public Categoria(String id, String nombre) {
-        this.id = id;
+    public Categoria(String nombre) {
         this.nombre = nombre;
     }
 }

@@ -1,7 +1,8 @@
 package com.bolsadeideas.springboot.webflux.app;
 
-import com.bolsadeideas.springboot.webflux.app.models.dao.ProductoDAO;
+import com.bolsadeideas.springboot.webflux.app.models.documents.Categoria;
 import com.bolsadeideas.springboot.webflux.app.models.documents.Producto;
+import com.bolsadeideas.springboot.webflux.app.models.services.ProductoServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,7 @@ import java.util.Date;
 public class SpringBootWebfluxApplication implements CommandLineRunner {
 
     @Autowired
-    private ProductoDAO dao;
+    private ProductoServiceImpl service;
 
     @Autowired
     private ReactiveMongoTemplate mongoTemplate;
@@ -31,21 +32,31 @@ public class SpringBootWebfluxApplication implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         mongoTemplate.dropCollection("productos").subscribe();
+        mongoTemplate.dropCollection("categorias").subscribe();
 
-        Flux.just(
-                new Producto("TV Panasonic Pantalla LCD", 456.89),
-                new Producto("Sony Camara HD Digital", 177.89),
-                new Producto("Apple iPod", 46.89),
-                new Producto("Sony Notebook", 846.89),
-                new Producto("Hewlett Packard Multifuncional", 200.89),
-                new Producto("Bianchi Bicicleta", 70.89),
-                new Producto("HP Notebook Omen 17", 2500.89),
-                new Producto("Mica Cómoda 5 cajones", 150.89),
-                new Producto("TV Sony Bravia OLED 4K Ultra HD", 2255.89)
-            ).flatMap(producto -> {
-                producto.setCreateAt(new Date());
-                return dao.save(producto);
-            })
+        Categoria electronico = new Categoria("Electrónico");
+        Categoria deporte = new Categoria("Deporte");
+        Categoria computacion = new Categoria("Computación");
+        Categoria muebles = new Categoria("Muebles");
+
+        Flux.just(electronico, deporte, computacion, muebles)
+            .flatMap(service::saveCategoria)
+            .doOnNext(c -> LOGGER.info("Categoria creada: {} Id: {}", c.getNombre(), c.getId()))
+            .thenMany(Flux.just(
+                    new Producto("TV Panasonic Pantalla LCD", 456.89, electronico),
+                    new Producto("Sony Camara HD Digital", 177.89, electronico),
+                    new Producto("Apple iPod", 46.89, electronico),
+                    new Producto("Sony Notebook", 846.89, computacion),
+                    new Producto("Hewlett Packard Multifuncional", 200.89, computacion),
+                    new Producto("Bianchi Bicicleta", 70.89, deporte),
+                    new Producto("HP Notebook Omen 17", 2500.89, computacion),
+                    new Producto("Mica Cómoda 5 cajones", 150.89, muebles),
+                    new Producto("TV Sony Bravia OLED 4K Ultra HD", 2255.89, electronico)
+                )
+                .flatMap(producto -> {
+                    producto.setCreateAt(new Date());
+                    return service.save(producto);
+                }))
             .subscribe(producto -> LOGGER.info("Insert: " + producto.getId() + " " + producto.getNombre()));
     }
 }
