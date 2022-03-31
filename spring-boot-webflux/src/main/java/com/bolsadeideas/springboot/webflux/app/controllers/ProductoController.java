@@ -7,16 +7,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.support.SessionStatus;
 import org.thymeleaf.spring5.context.webflux.ReactiveDataDriverContextVariable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.validation.Valid;
 import java.time.Duration;
+import java.util.Date;
 
 @SessionAttributes("producto")
 @Controller
@@ -83,12 +83,30 @@ public class ProductoController {
         return Mono.just("form");
     }
 
+    //el orden de BindingResult es importante siempre dsp del objeto que quiero validar
+    //@ModelAttribute es para decirle a la vista como se llama el objeto a pasar a la vista en caso de que sea diferente el nombre del objeto
     @PostMapping("/form")
-    public Mono<String> guardar(Producto producto, SessionStatus status) {
-        status.setComplete();
-        return service.save(producto)
-            .doOnNext(p -> LOGGER.info("Producto guardado: {} Id: {}", p.getNombre(), p.getId()))
-            .thenReturn("redirect:/listar");
+    public Mono<String> guardar(
+        @Valid Producto producto,
+        BindingResult result,
+        Model model,
+        SessionStatus status
+    ) {
+        if (result.hasErrors()) {
+            model.addAttribute("titulo", "Errores en formulario producto");
+            model.addAttribute("boton", "Guardar");
+            return Mono.just("form");
+        } else {
+            status.setComplete();
+
+            if (producto.getCreateAt() == null) {
+                producto.setCreateAt(new Date());
+            }
+
+            return service.save(producto)
+                .doOnNext(p -> LOGGER.info("Producto guardado: {} Id: {}", p.getNombre(), p.getId()))
+                .thenReturn("redirect:/listar?success=producto+guardado+con+exito");
+        }
     }
 
     @GetMapping("/listar-datadriver")
