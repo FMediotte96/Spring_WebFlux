@@ -6,6 +6,8 @@ import com.bolsadeideas.springboot.webflux.app.models.services.ProductoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -16,14 +18,19 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
+import java.io.File;
 import java.time.Duration;
 import java.util.Date;
+import java.util.UUID;
 
 @SessionAttributes("producto")
 @Controller
 public class ProductoController {
 
     private final ProductoService service;
+
+    @Value("${config.uploads.path}")
+    private String path;
 
     @Autowired
     public ProductoController(ProductoService service) {
@@ -96,6 +103,7 @@ public class ProductoController {
         @Valid Producto producto,
         BindingResult result,
         Model model,
+        @RequestPart FilePart file,
         SessionStatus status
     ) {
         if (result.hasErrors()) {
@@ -111,12 +119,26 @@ public class ProductoController {
                         producto.setCreateAt(new Date());
                     }
 
+                    if (!file.filename().isEmpty()) {
+                        producto.setFoto(UUID.randomUUID() + file.filename()
+                            .replace(" ", "")
+                            .replace(":", "")
+                            .replace("\\", "")
+                        );
+                    }
                     producto.setCategoria(c);
                     return service.save(producto);
                 })
                 .doOnNext(p -> {
                     LOGGER.info("Categoria asignada: {} Id Cat: {}", p.getCategoria().getNombre(), p.getCategoria().getId());
                     LOGGER.info("Producto guardado: {} Id: {}", p.getNombre(), p.getId());
+                })
+                .flatMap(p -> {
+                    if (!file.filename().isEmpty()) {
+                        return file.transferTo(new File(path + p.getFoto()));
+                    }
+                    return Mono.empty();
+
                 })
                 .thenReturn("redirect:/listar?success=producto+guardado+con+exito");
         }
