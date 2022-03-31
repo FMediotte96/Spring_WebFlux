@@ -1,5 +1,6 @@
 package com.bolsadeideas.springboot.webflux.app.controllers;
 
+import com.bolsadeideas.springboot.webflux.app.models.documents.Categoria;
 import com.bolsadeideas.springboot.webflux.app.models.documents.Producto;
 import com.bolsadeideas.springboot.webflux.app.models.services.ProductoService;
 import org.slf4j.Logger;
@@ -30,6 +31,11 @@ public class ProductoController {
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProductoController.class);
+
+    @ModelAttribute("categorias")
+    public Flux<Categoria> categorias() {
+        return service.findAllCategoria();
+    }
 
     @GetMapping({"/listar", "/"})
     public Mono<String> listar(Model model) {
