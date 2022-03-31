@@ -1,6 +1,8 @@
 package com.bolsadeideas.springboot.webflux.app.models.services;
 
+import com.bolsadeideas.springboot.webflux.app.models.dao.CategoriaDAO;
 import com.bolsadeideas.springboot.webflux.app.models.dao.ProductoDAO;
+import com.bolsadeideas.springboot.webflux.app.models.documents.Categoria;
 import com.bolsadeideas.springboot.webflux.app.models.documents.Producto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,9 +14,12 @@ public class ProductoServiceImpl implements ProductoService {
 
     private final ProductoDAO dao;
 
+    private final CategoriaDAO categoriaDAO;
+
     @Autowired
-    public ProductoServiceImpl(ProductoDAO dao) {
+    public ProductoServiceImpl(ProductoDAO dao, CategoriaDAO categoriaDAO) {
         this.dao = dao;
+        this.categoriaDAO = categoriaDAO;
     }
 
     @Override
@@ -48,5 +53,20 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     public Mono<Void> delete(Producto producto) {
         return dao.delete(producto);
+    }
+
+    @Override
+    public Flux<Categoria> findAllCategoria() {
+        return categoriaDAO.findAll();
+    }
+
+    @Override
+    public Mono<Categoria> findCategoriaById(String id) {
+        return categoriaDAO.findById(id);
+    }
+
+    @Override
+    public Mono<Categoria> saveCategoria(Categoria categoria) {
+        return categoriaDAO.save(categoria);
     }
 }
