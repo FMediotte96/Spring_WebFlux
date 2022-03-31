@@ -2,7 +2,7 @@ package com.bolsadeideas.springboot.webflux.app;
 
 import com.bolsadeideas.springboot.webflux.app.models.documents.Categoria;
 import com.bolsadeideas.springboot.webflux.app.models.documents.Producto;
-import com.bolsadeideas.springboot.webflux.app.models.services.ProductoServiceImpl;
+import com.bolsadeideas.springboot.webflux.app.models.services.ProductoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,11 +17,15 @@ import java.util.Date;
 @SpringBootApplication
 public class SpringBootWebfluxApplication implements CommandLineRunner {
 
-    @Autowired
-    private ProductoServiceImpl service;
+    private final ProductoService service;
+
+    private final ReactiveMongoTemplate mongoTemplate;
 
     @Autowired
-    private ReactiveMongoTemplate mongoTemplate;
+    public SpringBootWebfluxApplication(ProductoService service, ReactiveMongoTemplate mongoTemplate) {
+        this.service = service;
+        this.mongoTemplate = mongoTemplate;
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SpringBootWebfluxApplication.class);
 
@@ -57,6 +61,6 @@ public class SpringBootWebfluxApplication implements CommandLineRunner {
                     producto.setCreateAt(new Date());
                     return service.save(producto);
                 }))
-            .subscribe(producto -> LOGGER.info("Insert: " + producto.getId() + " " + producto.getNombre()));
+            .subscribe(producto -> LOGGER.info("Insert: {} {}",producto.getId(), producto.getNombre()));
     }
 }
