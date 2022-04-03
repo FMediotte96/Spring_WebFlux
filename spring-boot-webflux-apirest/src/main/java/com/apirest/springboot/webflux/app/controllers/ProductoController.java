@@ -3,21 +3,28 @@ package com.apirest.springboot.webflux.app.controllers;
 import com.apirest.springboot.webflux.app.models.documents.Producto;
 import com.apirest.springboot.webflux.app.models.services.ProductoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.File;
 import java.net.URI;
 import java.util.Date;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/productos")
 public class ProductoController {
 
     private final ProductoService service;
+
+    @Value("${config.uploads.path}")
+    private String path;
 
     @Autowired
     public ProductoController(ProductoService service) {
@@ -75,4 +82,18 @@ public class ProductoController {
             service.delete(p).then(Mono.just(new ResponseEntity<Void>(HttpStatus.NO_CONTENT)))
         ).defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
+
+    @PostMapping("/upload/{id}")
+    public Mono<ResponseEntity<Producto>> upload(@PathVariable String id, @RequestPart FilePart file) {
+        return service.findById(id).flatMap(p -> {
+                String filename = file.filename().replace(" ", "")
+                    .replace(":", "")
+                    .replace("\\", "");
+                p.setFoto(UUID.randomUUID() + "-" + filename);
+
+                return file.transferTo(new File(path + p.getFoto())).then(service.save(p));
+            }).map(ResponseEntity::ok)
+            .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
 }
