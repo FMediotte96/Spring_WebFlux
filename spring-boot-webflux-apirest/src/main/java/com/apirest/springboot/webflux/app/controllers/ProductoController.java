@@ -43,7 +43,7 @@ public class ProductoController {
 
     @PostMapping
     public Mono<ResponseEntity<Producto>> crear(@RequestBody Producto producto) {
-        if(producto.getCreateAt() == null) {
+        if (producto.getCreateAt() == null) {
             producto.setCreateAt(new Date());
         }
 
@@ -52,5 +52,19 @@ public class ProductoController {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(p)
         );
+    }
+
+    @PutMapping("/{id}")
+    public Mono<ResponseEntity<Producto>> editar(@RequestBody Producto producto, @PathVariable String id) {
+        return service.findById(id).flatMap(p -> {
+            p.setNombre(producto.getNombre());
+            p.setPrecio(producto.getPrecio());
+            p.setCategoria(producto.getCategoria());
+            return service.save(p);
+        }).map(p ->
+            ResponseEntity.created(URI.create("/api/productos/".concat(p.getId())))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(p)
+        ).defaultIfEmpty(ResponseEntity.notFound().build());
     }
 }
