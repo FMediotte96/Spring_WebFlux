@@ -96,4 +96,22 @@ public class ProductoController {
             .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
+
+    @PostMapping("/v2")
+    public Mono<ResponseEntity<Producto>> crearConFoto(Producto producto, @RequestPart FilePart file) {
+        if (producto.getCreateAt() == null) {
+            producto.setCreateAt(new Date());
+        }
+
+        String filename = file.filename().replace(" ", "")
+            .replace(":", "")
+            .replace("\\", "");
+        producto.setFoto(UUID.randomUUID() + "-" + filename);
+
+        return file.transferTo(new File(path + producto.getFoto())).then(service.save(producto))
+            .map(p -> ResponseEntity.created(URI.create("/api/productos/".concat(p.getId())))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(p)
+            );
+    }
 }
