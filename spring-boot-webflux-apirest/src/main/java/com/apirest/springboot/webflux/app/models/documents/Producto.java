@@ -28,6 +28,7 @@ public class Producto {
     private Date createAt;
 
     @Valid
+    @NotNull
     private Categoria categoria;
 
     private String foto;
