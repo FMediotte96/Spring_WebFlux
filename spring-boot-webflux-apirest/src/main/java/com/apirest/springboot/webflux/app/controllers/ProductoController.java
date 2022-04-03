@@ -3,6 +3,7 @@ package com.apirest.springboot.webflux.app.controllers;
 import com.apirest.springboot.webflux.app.models.documents.Producto;
 import com.apirest.springboot.webflux.app.models.services.ProductoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -66,5 +67,12 @@ public class ProductoController {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(p)
         ).defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public Mono<ResponseEntity<Void>> eliminar(@PathVariable String id) {
+        return service.findById(id).flatMap(p ->
+            service.delete(p).then(Mono.just(new ResponseEntity<Void>(HttpStatus.NO_CONTENT)))
+        ).defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 }
