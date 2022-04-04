@@ -9,6 +9,9 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
+import java.util.Date;
+
 import static org.springframework.web.reactive.function.BodyInserters.*;
 
 @Component
@@ -34,5 +37,20 @@ public class ProductoHandler {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(fromValue(p))
         ).switchIfEmpty(ServerResponse.notFound().build());
+    }
+
+    public Mono<ServerResponse> crear(ServerRequest request) {
+        Mono<Producto> producto = request.bodyToMono(Producto.class);
+
+        return producto.flatMap(p -> {
+            if(p.getCreateAt() == null) {
+                p.setCreateAt(new Date());
+            }
+            return service.save(p);
+        }).flatMap(p -> ServerResponse
+            .created(URI.create("/api/v2/productos".concat(p.getId())))
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(fromValue(p))
+        );
     }
 }
