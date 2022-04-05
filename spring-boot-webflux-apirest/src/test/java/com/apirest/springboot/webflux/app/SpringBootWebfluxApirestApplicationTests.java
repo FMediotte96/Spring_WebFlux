@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -21,7 +22,9 @@ import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+//@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureWebTestClient
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 class SpringBootWebfluxApirestApplicationTests {
 
     @Autowired
@@ -45,9 +48,7 @@ class SpringBootWebfluxApirestApplicationTests {
             .consumeWith(response -> {
                 List<Producto> productos = response.getResponseBody();
                 assert productos != null;
-                productos.forEach(p -> {
-                    System.out.println(p.getNombre());
-                });
+                productos.forEach(p -> System.out.println(p.getNombre()));
 
                 Assertions.assertTrue(productos.size() > 0);
             });
