@@ -4,6 +4,7 @@ import com.client.springboot.webflux.app.models.Producto;
 import com.client.springboot.webflux.app.services.ProductoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -54,7 +55,7 @@ public class ProductoHandler {
             .body(fromValue(p))
         ).onErrorResume(error -> {
             WebClientResponseException errorResponse = (WebClientResponseException) error;
-            if(errorResponse.getStatusCode() == HttpStatus.BAD_REQUEST) {
+            if (errorResponse.getStatusCode() == HttpStatus.BAD_REQUEST) {
                 return ServerResponse.badRequest()
                     .contentType(APPLICATION_JSON)
                     .body(fromValue(errorResponse.getResponseBodyAsString()));
@@ -78,4 +79,14 @@ public class ProductoHandler {
         return service.eliminar(id).then(ServerResponse.noContent().build());
     }
 
+    public Mono<ServerResponse> upload(ServerRequest request) {
+        String id = request.pathVariable("id");
+        return request.multipartData().map(multipart -> multipart.toSingleValueMap().get("file"))
+            .cast(FilePart.class)
+            .flatMap(file -> service.upload(file, id))
+            .flatMap(p -> ServerResponse.created(URI.create("/api/client/".concat(id)))
+                .contentType(APPLICATION_JSON)
+                .body(fromValue(p))
+            );
+    }
 }
