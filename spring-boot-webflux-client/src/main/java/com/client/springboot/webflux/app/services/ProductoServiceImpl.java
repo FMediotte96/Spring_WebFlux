@@ -20,16 +20,16 @@ import static org.springframework.web.reactive.function.BodyInserters.fromValue;
 @Service
 public class ProductoServiceImpl implements ProductoService {
 
-    private final WebClient client;
+    private final WebClient.Builder client;
 
     @Autowired
-    public ProductoServiceImpl(WebClient client) {
+    public ProductoServiceImpl(WebClient.Builder client) {
         this.client = client;
     }
 
     @Override
     public Flux<Producto> findAll() {
-        return client.get()
+        return client.build().get()
             .accept(APPLICATION_JSON)
             .exchangeToFlux(response -> response.bodyToFlux(Producto.class));
     }
@@ -39,7 +39,7 @@ public class ProductoServiceImpl implements ProductoService {
         Map<String, Object> params = new HashMap<>();
         params.put("id", id);
 
-        return client.get()
+        return client.build().get()
             .uri("/{id}", params)
             .accept(APPLICATION_JSON)
             .retrieve()
@@ -49,7 +49,7 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     public Mono<Producto> save(Producto producto) {
-        return client.post()
+        return client.build().post()
             .accept(APPLICATION_JSON)
             .contentType(APPLICATION_JSON)
             .body(fromValue(producto))
@@ -60,7 +60,7 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     public Mono<Producto> update(Producto producto, String id) {
-        return client.put()
+        return client.build().put()
             .uri("/{id}", Collections.singletonMap("id", id))
             .accept(APPLICATION_JSON)
             .contentType(APPLICATION_JSON)
@@ -71,7 +71,7 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     public Mono<Void> delete(String id) {
-        return client.delete()
+        return client.build().delete()
             .uri("/{id}", Collections.singletonMap("id", id))
             .retrieve()
             .bodyToMono(Void.class);
@@ -83,7 +83,7 @@ public class ProductoServiceImpl implements ProductoService {
         parts.asyncPart("file", file.content(), DataBuffer.class)
             .headers(h -> h.setContentDispositionFormData("file", file.filename()));
 
-        return client.post()
+        return client.build().post()
             .uri("/upload/{id}", Collections.singletonMap("id", id))
             .contentType(MULTIPART_FORM_DATA)
             .body(fromValue(parts.build()))
