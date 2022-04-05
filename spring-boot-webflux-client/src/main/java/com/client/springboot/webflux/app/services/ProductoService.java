@@ -15,7 +15,7 @@ public interface ProductoService {
 
     Mono<Producto> update(Producto producto, String id);
 
-    Mono<Void> eliminar(String id);
+    Mono<Void> delete(String id);
 
     Mono<Producto> upload(FilePart file, String id);
 }
