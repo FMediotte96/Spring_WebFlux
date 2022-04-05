@@ -3,7 +3,9 @@ package com.client.springboot.webflux.app.handler;
 import com.client.springboot.webflux.app.models.Producto;
 import com.client.springboot.webflux.app.services.ProductoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
@@ -50,7 +52,15 @@ public class ProductoHandler {
         }).flatMap(p -> ServerResponse.created(URI.create("/api/client/".concat(p.getId())))
             .contentType(APPLICATION_JSON)
             .body(fromValue(p))
-        );
+        ).onErrorResume(error -> {
+            WebClientResponseException errorResponse = (WebClientResponseException) error;
+            if(errorResponse.getStatusCode() == HttpStatus.BAD_REQUEST) {
+                return ServerResponse.badRequest()
+                    .contentType(APPLICATION_JSON)
+                    .body(fromValue(errorResponse.getResponseBodyAsString()));
+            }
+            return Mono.error(errorResponse);
+        });
     }
 
     public Mono<ServerResponse> editar(ServerRequest request) {
